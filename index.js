@@ -6,10 +6,11 @@ require("dotenv").config();
 app.use(cors());
 app.use(express.json());
 const jwt = require("jsonwebtoken");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 const uri =
-  "mongodb+srv://hasanarick:agK4GzcXmKDDRzCX@cluster0.tuis8.mongodb.net/?retryWrites=true&w=majority";
+  `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.tuis8.mongodb.net/?retryWrites=true&w=majority`;
+console.log(uri);
 const client = new MongoClient(uri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -19,10 +20,18 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     await client.connect();
-    const manufacturerCollection = client.db("manufacturer").collection("tools");
+    const manufacturerCollection = client
+      .db("manufacturer")
+      .collection("tools");
 
     app.get("/tools", async (req, res) => {
       const tools = await manufacturerCollection.find({}).toArray();
+      res.send(tools);
+    });
+    app.get("/tools/:id", async (req, res) => {
+      console.log(req.params.id);
+      const query = { _id: ObjectId(req.params.id) };
+      const tools = await manufacturerCollection.findOne(query);
       res.send(tools);
     });
   } finally {
