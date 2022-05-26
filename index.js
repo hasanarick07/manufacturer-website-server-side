@@ -40,6 +40,7 @@ async function run() {
       .collection("tools");
     const orderCollection = client.db("manufacturer").collection("orders");
     const usersCollection = client.db("manufacturer").collection("users");
+    const ratingsCollection = client.db("manufacturer").collection("ratings");
 
     app.get("/tools", async (req, res) => {
       const tools = await manufacturerCollection.find({}).toArray();
@@ -57,10 +58,27 @@ async function run() {
       const result = await orderCollection.insertOne(order);
       res.send({ success: true, result });
     });
+    app.get("/order", verifyjwt, async (req, res) => {
+      const email = req.query.email;
+      const decodedEmail = req.decoded.email;
+      if (email === decodedEmail) {
+        const query = { email: email };
+        const orders = await orderCollection.find(query).toArray();
+        return res.send(orders);
+      } else {
+        return res.status(403).send({ message: "Forbidden Access" });
+      }
+    });
+    app.delete("/order/:email", verifyjwt, async (req, res) => {
+      const email = req.params.email;
+      const filter = { email: email };
+      const result = await orderCollection.deleteOne(filter);
+      res.send(result);
+    });
     app.put("/user/:email", async (req, res) => {
       const email = req.params.email;
       const user = req.body;
-      console.log(user)
+      // console.log(user)
       const filter = { email: email };
       const options = { upsert: true };
       const updateDoc = { $set: user };
@@ -75,6 +93,17 @@ async function run() {
         { expiresIn: "30d" }
       );
       res.send({ result, token });
+    });
+    app.get("/user/:email", verifyjwt, async (req, res) => {
+      const email = req.params.email;
+      // console.log(email)
+      const user = await usersCollection.findOne({ email: email });
+      res.send(user);
+    });
+    app.post("/rating", async (req, res) => {
+      const rating = req.body;
+      const result = await ratingsCollection.insertOne(rating);
+      res.send({ success: true, result });
     });
   } finally {
   }
