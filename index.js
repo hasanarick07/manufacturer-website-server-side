@@ -105,6 +105,10 @@ async function run() {
       const result = await ratingsCollection.insertOne(rating);
       res.send({ success: true, result });
     });
+    app.get("/ratings", async (req, res) => {
+      const ratings = await ratingsCollection.find({}).toArray();
+      res.send(ratings);
+    });
   } finally {
   }
 }
