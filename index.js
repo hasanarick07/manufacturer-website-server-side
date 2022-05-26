@@ -69,6 +69,10 @@ async function run() {
         return res.status(403).send({ message: "Forbidden Access" });
       }
     });
+    app.get("/orders", verifyjwt, async (req, res) => {
+      const orders = await orderCollection.find({}).toArray();
+      res.send(orders);
+    });
     app.delete("/order/:email", verifyjwt, async (req, res) => {
       const email = req.params.email;
       const filter = { email: email };
@@ -94,13 +98,13 @@ async function run() {
       );
       res.send({ result, token });
     });
-    app.get("/user/:email", verifyjwt , async (req, res) => {
+    app.get("/user/:email", verifyjwt, async (req, res) => {
       const email = req.params.email;
       // console.log(email)
       const user = await usersCollection.findOne({ email: email });
       res.send(user);
     });
-    app.get("/users", verifyjwt , async (req, res) => {
+    app.get("/users", verifyjwt, async (req, res) => {
       const user = await usersCollection.find({}).toArray();
       res.send(user);
     });
@@ -113,7 +117,7 @@ async function run() {
       const ratings = await ratingsCollection.find({}).toArray();
       res.send(ratings);
     });
-    app.put("/user/admin/:email", verifyjwt , async (req, res) => {
+    app.put("/user/admin/:email", verifyjwt, async (req, res) => {
       const email = req.params.email;
       const filter = { email: email };
       const updateDoc = {
