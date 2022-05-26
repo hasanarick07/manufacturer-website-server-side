@@ -26,9 +26,9 @@ function verifyjwt(req, res, next) {
     if (err) {
       return res.status(403).send({ message: "Forbidden Access" });
     }
+    // console.log(decoded);
     req.decoded = decoded;
     next();
-    // console.log(decoded);
   });
 }
 
@@ -45,20 +45,22 @@ async function run() {
       const tools = await manufacturerCollection.find({}).toArray();
       res.send(tools);
     });
-    app.get("/tool/:id", async (req, res) => {
-      // console.log(req.params.id);
+    app.get("/tool/:id", verifyjwt, async (req, res) => {
+      // console.log(req.body,'hi');
       const query = { _id: ObjectId(req.params.id) };
       const tools = await manufacturerCollection.findOne(query);
       res.send(tools);
     });
     app.post("/order", async (req, res) => {
       const order = req.body;
+      // console.log("hi ", req.body.email);
       const result = await orderCollection.insertOne(order);
       res.send({ success: true, result });
     });
     app.put("/user/:email", async (req, res) => {
       const email = req.params.email;
       const user = req.body;
+      console.log(user)
       const filter = { email: email };
       const options = { upsert: true };
       const updateDoc = { $set: user };
