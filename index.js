@@ -94,10 +94,14 @@ async function run() {
       );
       res.send({ result, token });
     });
-    app.get("/user/:email", verifyjwt, async (req, res) => {
+    app.get("/user/:email", verifyjwt , async (req, res) => {
       const email = req.params.email;
       // console.log(email)
       const user = await usersCollection.findOne({ email: email });
+      res.send(user);
+    });
+    app.get("/users", verifyjwt , async (req, res) => {
+      const user = await usersCollection.find({}).toArray();
       res.send(user);
     });
     app.post("/rating", async (req, res) => {
@@ -108,6 +112,21 @@ async function run() {
     app.get("/ratings", async (req, res) => {
       const ratings = await ratingsCollection.find({}).toArray();
       res.send(ratings);
+    });
+    app.put("/user/admin/:email", verifyjwt , async (req, res) => {
+      const email = req.params.email;
+      const filter = { email: email };
+      const updateDoc = {
+        $set: { role: "admin" },
+      };
+      const result = await usersCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+    app.get("/admin/:email", async (req, res) => {
+      const email = req.params.email;
+      const user = await usersCollection.findOne({ email: email });
+      const isAdmin = user.role === "admin";
+      res.send({ admin: isAdmin });
     });
   } finally {
   }
