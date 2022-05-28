@@ -47,10 +47,22 @@ async function run() {
       res.send(tools);
     });
     app.get("/tool/:id", verifyjwt, async (req, res) => {
-      // console.log(req.body,'hi');
       const query = { _id: ObjectId(req.params.id) };
+      console.log(query, "hi tools");
       const tools = await manufacturerCollection.findOne(query);
       res.send(tools);
+    });
+    app.post("/tools", async (req, res) => {
+      const tools = req.body;
+      console.log("hi tools", req.body);
+      const result = await manufacturerCollection.insertOne(tools);
+      res.send({ success: true, result });
+    });
+    app.delete("/tools/:id", verifyjwt, async (req, res) => {
+      const queryDelete = { _id: ObjectId(req.params.id) };
+      // console.log(queryDelete, "hi delete");
+      const result = await orderCollection.deleteOne(queryDelete);
+      res.send(result);
     });
     app.post("/order", async (req, res) => {
       const order = req.body;
@@ -73,12 +85,14 @@ async function run() {
       const orders = await orderCollection.find({}).toArray();
       res.send(orders);
     });
-    app.delete("/order/:email", verifyjwt, async (req, res) => {
-      const email = req.params.email;
-      const filter = { email: email };
-      const result = await orderCollection.deleteOne(filter);
+
+    app.delete("/order/:id", verifyjwt, async (req, res) => {
+      const queryDelete = { _id: ObjectId(req.params.id) };
+      console.log(queryDelete, "hi delete");
+      const result = await orderCollection.deleteOne(queryDelete);
       res.send(result);
     });
+
     app.put("/user/:email", async (req, res) => {
       const email = req.params.email;
       const user = req.body;
