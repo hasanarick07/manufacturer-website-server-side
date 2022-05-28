@@ -7,6 +7,7 @@ app.use(cors());
 app.use(express.json());
 const jwt = require("jsonwebtoken");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.tuis8.mongodb.net/?retryWrites=true&w=majority`;
 // console.log(uri);
@@ -41,6 +42,7 @@ async function run() {
     const orderCollection = client.db("manufacturer").collection("orders");
     const usersCollection = client.db("manufacturer").collection("users");
     const ratingsCollection = client.db("manufacturer").collection("ratings");
+    const paymentsCollection = client.db("manufacturer").collection("payments");
 
     app.get("/tools", async (req, res) => {
       const tools = await manufacturerCollection.find({}).toArray();
@@ -91,12 +93,41 @@ async function run() {
       const result = await orderCollection.findOne(query);
       res.send(result);
     });
+
+    app.post('/create-payment-intent', verifyjwt, async(req, res) =>{
+      const order = req.body;
+      const price = order.price;
+      const amount = price*100;
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount : amount,
+        currency: 'usd',
+        payment_method_types:['card']
+      });
+      res.send({clientSecret: paymentIntent.client_secret})
+    });
+
     app.delete("/order/:id", verifyjwt, async (req, res) => {
       const queryDelete = { _id: ObjectId(req.params.id) };
       console.log(queryDelete, "hi delete");
       const result = await orderCollection.deleteOne(queryDelete);
       res.send(result);
     });
+
+    app.patch('/order/:id', verifyjwt, async(req, res) =>{
+      const id  = req.params.id;
+      const payment = req.body;
+      const filter = {_id: ObjectId(id)};
+      const updatedDoc = {
+        $set: {
+          paid: true,
+          transactionId: payment.transactionId
+        }
+      }
+
+      const result = await paymentsCollection.insertOne(payment);
+      const updatedOrder = await orderCollection.updateOne(filter, updatedDoc);
+      res.send(updatedOrder);
+    })
 
     app.put("/user/:email", async (req, res) => {
       const email = req.params.email;
