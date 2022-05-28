@@ -61,7 +61,7 @@ async function run() {
     app.delete("/tools/:id", verifyjwt, async (req, res) => {
       const queryDelete = { _id: ObjectId(req.params.id) };
       // console.log(queryDelete, "hi delete");
-      const result = await orderCollection.deleteOne(queryDelete);
+      const result = await manufacturerCollection.deleteOne(queryDelete);
       res.send(result);
     });
     app.post("/order", async (req, res) => {
@@ -86,6 +86,11 @@ async function run() {
       res.send(orders);
     });
 
+    app.get("/order/:id", verifyjwt, async (req, res) => {
+      const query = { _id: ObjectId(req.params.id) };
+      const result = await orderCollection.findOne(query);
+      res.send(result);
+    });
     app.delete("/order/:id", verifyjwt, async (req, res) => {
       const queryDelete = { _id: ObjectId(req.params.id) };
       console.log(queryDelete, "hi delete");
